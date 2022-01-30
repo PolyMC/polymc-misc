@@ -113,7 +113,13 @@ do
     	makepkg --printsrcinfo &gt; .SRCINFO
     	git commit -am &quot;Update to $VER&quot;
     	git push origin master
-    	cd ..
+    	cd ../../mpr/polymc$i
+        sed -i &quot;s/pkgver=.*/pkgver=$VER/&quot; PKGBUILD
+        updpkgsums
+        makedeb --printsrcinfo &gt; .SRCINFO
+        git commit -am &quot;Update to $VER&quot;
+        git push origin master
+        cd ../../
     fi
 done</command>
       <configuredLocalRules/>
