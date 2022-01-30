@@ -9,7 +9,7 @@
       <displayName></displayName>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
   </properties>
-  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.10.1">
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@4.10.3">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
@@ -39,23 +39,28 @@
   <builders>
     <hudson.tasks.Shell>
       <command>rm -rf *.tar.zst *.zip *.deb *.AppImage {build_*}/prefix
-git submodule init &amp;&amp; git submodule update</command>
+git submodule init &amp;&amp; git submodule update
+</command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
       <command>platform=&apos;win32&apos;
 builddir=&quot;build_$platform&quot;
 
+rm -rf $builddir/CMakeCache.txt
+rm -rf $builddir/prefix/polymc.exe
+
 i686-w64-mingw32-cmake -S . -B $builddir \
 	-DCMAKE_INSTALL_PREFIX=&quot;$builddir/prefix/&quot; \
 	-DCMAKE_BUILD_TYPE=Release \
     -DLauncher_BUILD_PLATFORM=$platform \
+    -DLauncher_APP_BINARY_NAME=&quot;PolyMC&quot; \
     -G Ninja
 
 ninja -v -j4 -C $builddir
 
 ninja -C $builddir install
-cp /usr/i686-w64-mingw32/bin/{Qt5{Core,Gui,Network,Widgets,Xml},lib{gcc_s_dw2-1,stdc++-6,ssp-0,winpthread-1,iconv-2,pcre2-16-0,harfbuzz-0,png16-16,glib-2.0-0,freetype-6,graphite2,intl-8,bz2-1,pcre-1,brotli{dec,common},crypto-1_1,ssl-1_1},zlib1}.dll $builddir/prefix/
+cp /usr/i686-w64-mingw32/bin/{Qt5{Core,Gui,Network,Widgets,Xml,Svg},lib{gcc_s_dw2-1,stdc++-6,ssp-0,winpthread-1,iconv-2,pcre2-16-0,harfbuzz-0,png16-16,glib-2.0-0,freetype-6,graphite2,intl-8,bz2-1,pcre-1,brotli{dec,common},crypto-1_1,ssl-1_1},zlib1}.dll $builddir/prefix/
 
 cd $builddir/prefix
 VER=`git describe --tags`
@@ -65,7 +70,11 @@ zip ../../$platform-$VER.zip -r *
       <configuredLocalRules/>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
-      <command>cmake -S . -B build_lin64-system \
+      <command>rm -rf build_lin64-system/prefix
+
+rm -rf build_lin64-system/CMakeCache.txt
+
+cmake -S . -B build_lin64-system \
 	-DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=&quot;/usr&quot; \
     -DLauncher_LAYOUT=lin-system \
@@ -78,15 +87,6 @@ DESTDIR=prefix ninja -C build_lin64-system install
 cd build_lin64-system/prefix
 VER=`git describe --tags`
 tar --zstd -cf ../../lin64-system-$VER.tar.zst .
-
-cd ../../packages/debian
-cp ../../build_lin64-system builddir -rT
-
-./makedeb.sh
-
-mv polymc.deb ../../polymc-${VER}-amd64.deb
-
-cd ../../
 
 export VERSION=$VER
 DESTDIR=../AppDir ninja -C build_lin64-system install
@@ -101,21 +101,32 @@ LD_LIBRARY_PATH=&quot;$LD_LIBRARY_PATH&quot;:AppDir/usr/lib/jvm/java-8-openjdk/j
 LD_LIBRARY_PATH=&quot;$LD_LIBRARY_PATH&quot;:AppDir/usr/lib/jvm/java-8-openjdk/jre/lib/amd64
 linuxdeploy --appdir AppDir --output appimage -i program_info/org.polymc.PolyMC.svg --plugin qt
 
-sed -i &quot;s/pkgver=.*/pkgver=$VER/&quot; PKGBUILD
-makepkg -s</command>
+for i in &quot;&quot; &quot;-bin&quot;
+do
+	git stash
+	git pull -r # for safety
+    if [ &quot;`grep -e pkgver PKGBUILD`&quot; != &quot;pkgver=$VER&quot; ]
+    then
+    	cd aur/polymc$i
+    	sed -i &quot;s/pkgver=.*/pkgver=$VER/&quot; PKGBUILD
+    	updpkgsums
+    	makepkg --printsrcinfo &gt; .SRCINFO
+    	git commit -am &quot;Update to $VER&quot;
+    	git push origin master
+    	cd ..
+    fi
+done</command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
       <command>VER=`git describe --tags`
-mkdir -p /srv/polymc/{$VER,latest}/{deb,win32,lin64-system,appimage,arch}
-cp polymc-${VER}-amd64.deb /srv/polymc/$VER/deb
+mkdir -p /srv/polymc/{$VER,latest}/{win32,lin64-system,appimage}
 cp lin64-system-$VER.tar.zst /srv/polymc/$VER/lin64-system
 cp win32-$VER.zip /srv/polymc/$VER/win32
 cp PolyMC-$VER-x86_64.AppImage /srv/polymc/$VER/appimage
-cp polymc-bin-$VER-1-x86_64.pkg.tar.zst /srv/polymc/$VER/arch
 
 cd /srv/polymc/
-for pkg in $VER/*/*.{zip,deb,zst,AppImage}
+for pkg in $VER/*/*.{zip,zst,AppImage}
 do
     sha256sum $pkg &gt; $pkg.sha256
 done
@@ -124,18 +135,14 @@ ln -sfT $PWD/$VER/lin64-system/lin64-system-$VER.tar.zst latest/lin64-system/lin
 ln -sfT $PWD/$VER/lin64-system/lin64-system-$VER.tar.zst.sha256 latest/lin64-system/lin64-system.tar.zst.sha256
 ln -sfT $PWD/$VER/win32/win32-$VER.zip latest/win32/win32.zip
 ln -sfT $PWD/$VER/win32/win32-$VER.zip.sha256 latest/win32/win32.zip.sha256
-ln -sfT $PWD/$VER/deb/polymc-$VER-amd64.deb latest/deb/polymc-amd64.deb
-ln -sfT $PWD/$VER/deb/polymc-$VER-amd64.deb.sha256 latest/deb/polymc-amd64.deb.sha256
 ln -sfT $PWD/$VER/appimage/PolyMC-$VER-x86_64.AppImage latest/appimage/PolyMC-latest-x86_64.AppImage
-ln -sfT $PWD/$VER/appimage/PolyMC-$VER-x86_64.AppImage.sha256 latest/appimage/PolyMC-latest-x86_64.AppImage.sha256
-ln -sfT $PWD/$VER/arch/polymc-bin-$VER-1-x86_64.pkg.tar.zst latest/arch/polymc-bin-latest-1-x86_64.pkg.tar.zst
-ln -sfT $PWD/$VER/arch/polymc-bin-$VER-1-x86_64.pkg.tar.zst.sha256 latest/arch/polymc-bin-latest-1-x86_64.pkg.tar.zst.sha256</command>
+ln -sfT $PWD/$VER/appimage/PolyMC-$VER-x86_64.AppImage.sha256 latest/appimage/PolyMC-latest-x86_64.AppImage.sha256</command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
-      <artifacts>lin64-system*.tar.zst, win32*.zip, polymc*.deb, PolyMC*.AppImage, polymc*.pkg.tar.zst</artifacts>
+      <artifacts>lin64-system*.tar.zst, win32*.zip, PolyMC*.AppImage</artifacts>
       <allowEmptyArchive>false</allowEmptyArchive>
       <onlyIfSuccessful>false</onlyIfSuccessful>
       <fingerprint>false</fingerprint>
