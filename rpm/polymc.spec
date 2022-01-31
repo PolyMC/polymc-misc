@@ -5,7 +5,7 @@
 %global quazip_shortcommit          %(c=%{quazip_commit}; echo ${c:0:7})
 
 Name:           polymc
-Version:        $VER
+Version:        1.0.6
 Release:        2%{?dist}
 Summary:        Minecraft launcher with ability to manage multiple instances
 
