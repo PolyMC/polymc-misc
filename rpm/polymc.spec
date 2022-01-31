@@ -112,7 +112,7 @@ echo "%{_libdir}/%{name}" > "%{buildroot}%{_sysconfdir}/ld.so.conf.d/%{name}-%{_
 # skip tests on systems that aren't officially supported
 %if ! 0%{?suse_version}
 %ctest
-desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.polymc.desktop
+desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.desktop
 %endif
 
 
@@ -124,11 +124,14 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.polymc.des
 %{_datadir}/%{name}/*
 %{_datadir}/metainfo/org.polymc.PolyMC.metainfo.xml
 %{_datadir}/icons/hicolor/scalable/apps/org.polymc.PolyMC.svg
-%{_datadir}/applications/org.polymc.polymc.desktop
+%{_datadir}/applications/org.polymc.PolyMC.desktop
 %config %{_sysconfdir}/ld.so.conf.d/*
 
 
 %changelog
+* Mon Jan 24 2022 Carson Rueter <swurl@swurl.xyz> - 1.0.6
+- update to 1.0.6, fix desktop file
+
 * Mon Jan 24 2022 Jan Drögehoff <sentrycraft123@gmail.com> - 1.0.5-2
 - remove explicit dependencies, correct dependencies to work on OpenSuse
 
