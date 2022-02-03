@@ -60,7 +60,7 @@ i686-w64-mingw32-cmake -S . -B $builddir \
 ninja -v -j4 -C $builddir
 
 ninja -C $builddir install
-cp /usr/i686-w64-mingw32/bin/{Qt5{Core,Gui,Network,Widgets,Xml,Svg},lib{gcc_s_dw2-1,stdc++-6,ssp-0,winpthread-1,iconv-2,pcre2-16-0,harfbuzz-0,png16-16,glib-2.0-0,freetype-6,graphite2,intl-8,bz2-1,pcre-1,brotli{dec,common},crypto-1_1,ssl-1_1},zlib1}.dll $builddir/prefix/
+cp /usr/i686-w64-mingw32/bin/{Qt5{Core,Gui,Network,Widgets,Xml,Svg,Multimedia{,Widgets}},lib{gcc_s_dw2-1,stdc++-6,ssp-0,winpthread-1,iconv-2,pcre2-16-0,harfbuzz-0,png16-16,glib-2.0-0,freetype-6,graphite2,intl-8,bz2-1,pcre-1,brotli{dec,common},crypto-1_1,ssl-1_1},zlib1}.dll $builddir/prefix/
 
 cd $builddir/prefix
 VER=`git describe --tags`
@@ -88,6 +88,7 @@ cd build_lin64-system/prefix
 VER=`git describe --tags`
 tar --zstd -cf ../../lin64-system-$VER.tar.zst .
 
+cd ../../
 export VERSION=$VER
 DESTDIR=../AppDir ninja -C build_lin64-system install
 rm -rf AppDir/usr/lib/jvm
@@ -101,27 +102,92 @@ LD_LIBRARY_PATH=&quot;$LD_LIBRARY_PATH&quot;:AppDir/usr/lib/jvm/java-8-openjdk/j
 LD_LIBRARY_PATH=&quot;$LD_LIBRARY_PATH&quot;:AppDir/usr/lib/jvm/java-8-openjdk/jre/lib/amd64
 linuxdeploy --appdir AppDir --output appimage -i program_info/org.polymc.PolyMC.svg --plugin qt
 
-for i in &quot;&quot; &quot;-bin&quot;
+# FIXME: this code is ugly and it sucks and i hate it.
+for repo in &quot;aur&quot; &quot;mpr&quot;
 do
-	git stash
-	git pull -r # for safety
-    if [ &quot;`grep -e pkgver PKGBUILD`&quot; != &quot;pkgver=$VER&quot; ]
-    then
-    	cd aur/polymc$i
-    	sed -i &quot;s/pkgver=.*/pkgver=$VER/&quot; PKGBUILD
-    	updpkgsums
-    	makepkg --printsrcinfo &gt; .SRCINFO
-    	git commit -am &quot;Update to $VER&quot;
-    	git push origin master
-    	cd ../../mpr/polymc$i
+    for packagetype in &quot;&quot; &quot;-bin&quot;
+    do
+        pushd $repo/polymc$packagetype
+        git checkout master
+        # discard any local diffrence and just go by the content of origin
+        # doing git rebase in an automated script isn&apos;t &quot;safety&quot;
+
+        # The creator of the above message made a minor spelling mistake.
+        # Therefore, he is wrong, and his opinion is not to be respected.
+        # Rebase has &quot;base&quot; in it, therefore it is based.
+        # git reset does not have &quot;base&quot; in it (unbased).
+        # Therefore, rebase is safe + based.
+        git fetch --all
+        git reset --hard origin/master
+
+        # remove all files and directories that are not part of the repo
+        # this is required to make sure it&apos;s not using the hash of a previous version of the package
+        # when we use updpkgsums
+        git clean -f -xd # Lol xd
+
         sed -i &quot;s/pkgver=.*/pkgver=$VER/&quot; PKGBUILD
+
+        set +e
+        git update-index --refresh
+        git diff-index --quiet HEAD --
+        version_unchanged=$?
+        set -e
+
+        cp ../../lin64-system-$VER.tar.zst .
+
         updpkgsums
-        makedeb --printsrcinfo &gt; .SRCINFO
-        git commit -am &quot;Update to $VER&quot;
+
+        rm lin64-system-$VER.tar.zst # This is a useless command but I literally could not care less.
+
+        set +e
+        git update-index --refresh
+        git diff-index --quiet HEAD --
+        # the name of this variable is technically wrong
+        # because version_unchanged being false will make this also false
+        # since the changes would still be there from the version even if the
+        # hash was unchanged, but that doesnt really matter
+        # because we only care about the value of this variable when the
+        # version is unchanged
+        # ... like i said this code sucks and i hate it
+        hash_unchanged=$?
+        set -e
+        
+        declare COMMIT_MSG
+
+        # if the version changed reset pkgrel to 1
+        if [ $version_unchanged -ne 0 ]
+        then
+            sed -i &quot;s|pkgrel=.*|pkgrel=1|&quot; PKGBUILD
+            COMMIT_MSG=&quot;Update to $VER&quot;
+
+        # if the version is unchanged but the hash is changed
+        # then increment pkgrel
+        elif [ $hash_unchanged -ne 0 ]
+        then
+            new_pkgrel=$(($(grep -e pkgrel PKGBUILD | cut -d &quot;=&quot; -f2) + 1))
+            sed -i &quot;s|pkgrel=.*|pkgrel=$new_pkgrel|&quot; PKGBUILD
+            COMMIT_MSG=&quot;Update hash&quot;
+        fi
+
+        makepkg --printsrcinfo &gt; .SRCINFO
+
+        git commit -am &quot;$COMMIT_MSG&quot; || echo &quot;Nothing changed.&quot;
         git push origin master
-        cd ../../
-    fi
-done</command>
+
+        popd
+    done
+done
+
+cd polymc-misc
+git checkout master
+git fetch --all
+git reset --hard origin/master
+sed -i &quot;s/Version:.*/Version:        $VER/&quot; rpm/polymc.spec
+git commit -am &quot;update RPM to $VER&quot; || echo &quot;Nothing changed.&quot;
+git push origin master
+cd ..
+
+timeout 5 copr-cli build-package polymc --name polymc || echo &quot;COPR package is currently building.&quot;</command>
       <configuredLocalRules/>
     </hudson.tasks.Shell>
     <hudson.tasks.Shell>
