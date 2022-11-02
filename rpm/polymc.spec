@@ -148,6 +148,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.des
 * Tue Nov 01 2022 Jenkins CI <jenkins@swurl.xyz> - 1.4.3
 - Update to 1.4.3
 
+* Tue Nov 01 2022 Jenkins CI <jenkins@swurl.xyz> - 1.4.3
+- Update to 1.4.3
+
 * Tue Oct 18 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.4.2-2
 - Project was subject to a hostile takeover, point meta towards safe url
 
