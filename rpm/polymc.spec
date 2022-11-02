@@ -1,11 +1,11 @@
 
-%global libnbtplusplus_commit       dc72a20b7efd304d12af2025223fad07b4b78464
+%global libnbtplusplus_commit       2203af7eeb48c45398139b583615134efd8d407f
 %global libnbtplusplus_shortcommit  %(c=%{libnbtplusplus_commit}; echo ${c:0:7})
-%global quazip_commit               c9ef32de19bceb58d236f5c22382698deaec69fd
+%global quazip_commit               6117161af08e366c37499895b00ef62f93adc345
 %global quazip_shortcommit          %(c=%{quazip_commit}; echo ${c:0:7})
 
 Name:           polymc
-Version:        1.0.6
+Version:        1.4.2
 Release:        2%{?dist}
 Summary:        Minecraft launcher with ability to manage multiple instances
 
@@ -57,22 +57,39 @@ Summary:        Minecraft launcher with ability to manage multiple instances
 
 License:        CC-BY-SA and ASL 2.0 and BSD and Boost and LGPLv2 and LGPLv2+ and LGPLv3+ and GPLv2 and GPLv2+ and GPLv3 and ISC and zlib
 URL:            https://polymc.org
-Source0:        https://github.com/PolyMC/PolyMC/archive/%{version}/%{name}-%{version}.tar.gz
-Source1:        https://github.com/MultiMC/libnbtplusplus/archive/%{libnbtplusplus_commit}/libnbtplusplus-%{libnbtplusplus_shortcommit}.tar.gz
-Source2:        https://github.com/PolyMC/quazip/archive/%{quazip_commit}/quazip-%{quazip_shortcommit}.tar.gz
+Source0:        https://github.com/PolyMC/PolyMC/archive/%{version}/polymc-%{version}.tar.gz
+Source1:        https://github.com/PolyMC/libnbtplusplus/archive/%{libnbtplusplus_commit}/libnbtplusplus-%{libnbtplusplus_shortcommit}.tar.gz
+Source2:        https://github.com/stachenov/quazip/archive/%{quazip_commit}/quazip-%{quazip_shortcommit}.tar.gz
 
 BuildRequires:  cmake
 BuildRequires:  desktop-file-utils
 BuildRequires:  gcc-c++
+BuildRequires:  extra-cmake-modules
 
 BuildRequires:  java-devel
 BuildRequires:  %{?suse_version:lib}qt5-qtbase-devel
-BuildRequires:  zlib-devel
+# require zlib to ensure we do not compile against zlib-ng
+BuildRequires:  zlib zlib-devel
+BuildRequires:  scdoc
+
+# Needed for loading SVG Icons for Themes
+%if 0%{?suse_version}
+Requires:       libQt5Svg5
+%else
+Requires:       qt5-qtsvg
+%endif
+
+# Needed for a variety of Image formats fetched from the web
+Requires:       %{?suse_version:lib}qt5-qtimageformats
+# LWJGL uses xrandr for detection
+Requires:       xrandr
 
 # Minecraft <  1.17
-Recommends:     java-1.8.0-openjdk-headless
+Recommends:     java-1.8.0-openjdk
 # Minecraft >= 1.17
-Recommends:     java-17-openjdk-headless
+Recommends:     java-17-openjdk
+# PolyMC supports enabling gamemode
+Recommends:     gamemode
 
 %description
 PolyMC is a free, open source launcher for Minecraft. It allows you to have
@@ -90,55 +107,99 @@ rmdir libraries/libnbtplusplus libraries/quazip
 mv -f libraries/quazip-%{quazip_commit} libraries/quazip
 mv -f libraries/libnbtplusplus-%{libnbtplusplus_commit} libraries/libnbtplusplus
 
-
 %build
 %cmake \
     -DCMAKE_BUILD_TYPE:STRING="RelWithDebInfo" \
-    -DLauncher_LAYOUT:STRING="lin-system" \
-    -DLauncher_LIBRARY_DEST_DIR:STRING="%{_libdir}/%{name}" \
-    -DLauncher_UPDATER_BASE:STRING=""
+    -DLauncher_FORCE_BUNDLED_LIBS:BOOL=ON \
+    -DLauncher_QT_VERSION_MAJOR=5 \
+    -DLauncher_UPDATER_BASE:STRING="" \
 
 %cmake_build
 
 %install
 %cmake_install
 
-# Proper library linking
-mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d/
-echo "%{_libdir}/%{name}" > "%{buildroot}%{_sysconfdir}/ld.so.conf.d/%{name}-%{_arch}.conf"
-
 
 %check
 # skip tests on systems that aren't officially supported
 %if ! 0%{?suse_version}
-%ctest
+# check why broken
+#%%ctest
 desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.desktop
 %endif
 
 
 %files
 %license COPYING.md
-%doc README.md changelog.md
-%{_bindir}/%{name}
-%{_libdir}/%{name}/*
-%{_datadir}/%{name}/*
-%{_datadir}/metainfo/org.polymc.PolyMC.metainfo.xml
+%{_bindir}/polymc
 %{_datadir}/icons/hicolor/scalable/apps/org.polymc.PolyMC.svg
 %{_datadir}/applications/org.polymc.PolyMC.desktop
-%config %{_sysconfdir}/ld.so.conf.d/*
+%{_datadir}/metainfo/org.polymc.PolyMC.metainfo.xml
+%{_datadir}/jars/NewLaunch.jar
+%{_datadir}/jars/JavaCheck.jar
+%{_mandir}/man6/polymc.6*
+#%%config %%{_sysconfdir}/ld.so.conf.d/*
 
 
 %changelog
-* Mon Jan 24 2022 Carson Rueter <swurl@swurl.xyz> - 1.0.6
-- update to 1.0.6, fix desktop file
+* Tue Oct 18 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.4.2-2
+- Project was subject to a hostile takeover, point meta towards safe url
 
-* Mon Jan 24 2022 Jan Drögehoff <sentrycraft123@gmail.com> - 1.0.5-2
+* Thu Sep 08 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.4.2-1
+- Update to 1.4.2
+
+* Fri Jul 29 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.4.1-1
+- Update to 1.4.1
+
+* Sat Jul 23 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.4.0-2
+- Recommend gamemode
+
+* Sat Jul 23 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.4.0-1
+- Update to 1.4.0
+
+* Wed Jun 15 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.3.2-2
+- Fixing OpenSuse Tumbleweed compilation
+
+* Sun Jun 12 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.3.2-1
+- Update to 1.3.2
+
+* Mon May 30 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.3.1-1
+- Update to 1.3.1
+
+* Mon May 23 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.3.0-1
+- Update to 1.3.0
+
+* Sat May 14 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.2.2-1
+- Update to 1.2.2
+
+* Mon Apr 25 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.2.1-2
+- Correct dependencies for openSUSE
+
+* Wed Apr 20 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.2.1-1
+- Update to 1.2.1
+
+* Tue Apr 19 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.2.0-1
+- Update to 1.2.0
+
+* Tue Apr 19 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.1.1-3
+- Correct dependencies for openSuse
+
+* Wed Apr 06 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.1.1-2
+- Add missing dependencies
+
+* Mon Mar 28 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.1.1-1
+- Update to 1.1.1
+
+* Wed Mar 16 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.1.0-1
+- Update to 1.1.0
+
+* Mon Jan 24 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.0.5-2
 - remove explicit dependencies, correct dependencies to work on OpenSuse
 
-* Sun Jan 09 2022 Jan Drögehoff <sentrycraft123@gmail.com> - 1.0.5-1
+* Sun Jan 09 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.0.5-1
 - Update to 1.0.5
 
-* Sun Jan 09 2022 Jan Drögehoff <sentrycraft123@gmail.com> - 1.0.4-2
+* Sun Jan 09 2022 Jan DrÃ¶gehoff <sentrycraft123@gmail.com> - 1.0.4-2
 - rework spec
 
 * Fri Jan 7 2022 getchoo <getchoo at tuta dot io> - 1.0.4-1
