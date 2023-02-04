@@ -5,7 +5,7 @@
 %global quazip_shortcommit          %(c=%{quazip_commit}; echo ${c:0:7})
 
 Name:           polymc
-Version:        1.4.3
+Version:        5.0
 Release:        2%{?dist}
 Summary:        Minecraft launcher with ability to manage multiple instances
 
@@ -142,6 +142,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.des
 
 
 %changelog
+* Sat Feb 04 2023 Jenkins CI <jenkins@swurl.xyz> - 5.0
+- Update to 5.0
+
 * Tue Nov 01 2022 Jenkins CI <jenkins@swurl.xyz> - 1.4.3
 - Update to 1.4.3
 
