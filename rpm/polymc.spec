@@ -6,7 +6,7 @@
 
 Name:           polymc
 Version:        5.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Minecraft launcher with ability to manage multiple instances
 
 #
@@ -84,6 +84,9 @@ Requires:       %{?suse_version:lib}qt5-qtimageformats
 # LWJGL uses xrandr for detection
 Requires:       xrandr
 
+# i hate opensuse
+Requires:       %{?suse_version:lib}qt5-qtcharts
+
 # Minecraft <  1.17
 Recommends:     java-1.8.0-openjdk
 # Minecraft >= 1.17
@@ -142,6 +145,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.des
 
 
 %changelog
+* Mon Feb 20 2023 Carson Rueter <swurl@swurl.xyz> - 5.1-3
+- Added qt charts dependency
+
 * Sun Feb 19 2023 Jenkins CI <jenkins@swurl.xyz> - 5.1
 - Update to 5.1
 
