@@ -78,16 +78,24 @@ BuildRequires:  %{?suse_version:lib}qt5-qtbase-devel
 BuildRequires:  zlib zlib-devel
 BuildRequires:  scdoc
 
-# i hate opensuse
-BuildRequires:       %{?suse_version:lib}qt5-qtcharts-devel
+# i love opensuse
+%if 0%{?suse_version}
+BuildRequires:  libQt5Charts5-devel
+%else
+BuildRequires:  qt5-qtcharts-devel
+%endif
 
 # Needed for a variety of Image formats fetched from the web
 Requires:       %{?suse_version:lib}qt5-qtimageformats
 # LWJGL uses xrandr for detection
 Requires:       xrandr
 
-# i hate opensuse
-BuildRequires:  cmake(Qt5Charts)
+# i love opensuse
+%if 0%{?suse_version}
+Requires:       libQt5Charts5
+%else
+Requires:       qt5-qtcharts
+%endif
 # Needed for loading SVG Icons for Themes
 %if 0%{?suse_version}
 Requires:       libQt5Svg5
@@ -100,9 +108,12 @@ Requires:       %{?suse_version:lib}qt5-qtimageformats
 # LWJGL uses xrandr for detection
 Requires:       xrandr
 
-# I hate opensuse
-Requires:       %{?suse_version:lib}qt5-qtcharts
-
+# i love opensuse
+%if 0%{?suse_version}
+Requires:       libQt5Charts5
+%else
+Requires:       qt5-qtcharts
+%endif
 # Minecraft <  1.17
 Recommends:     java-1.8.0-openjdk
 # Minecraft >= 1.17
