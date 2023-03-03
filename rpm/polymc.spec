@@ -87,7 +87,7 @@ Requires:       %{?suse_version:lib}qt5-qtimageformats
 Requires:       xrandr
 
 # i hate opensuse
-Requires:       %{?suse_version:lib}qt5-qtcharts
+BuildRequires:  cmake(Qt5Charts)
 # Needed for loading SVG Icons for Themes
 %if 0%{?suse_version}
 Requires:       libQt5Svg5
