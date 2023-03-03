@@ -1,12 +1,15 @@
-
 %global libnbtplusplus_commit       2203af7eeb48c45398139b583615134efd8d407f
 %global libnbtplusplus_shortcommit  %(c=%{libnbtplusplus_commit}; echo ${c:0:7})
 %global quazip_commit               6117161af08e366c37499895b00ef62f93adc345
 %global quazip_shortcommit          %(c=%{quazip_commit}; echo ${c:0:7})
+%global filesystem_commit           cd6805e94dd5d6346be1b75a54cdc27787319dd2
+%global filesystem_shortcommit      %(c=%{filesystem_commit}; echo ${c:0:7})
+%global tomlplusplus_commit         4b166b69f28e70a416a1a04a98f365d2aeb90de8
+%global tomlplusplus_shortcommit    %(c=%{tomlplusplus_commit}; echo ${c:0:7})
 
 Name:           polymc
 Version:        5.1
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Minecraft launcher with ability to manage multiple instances
 
 #
@@ -60,11 +63,14 @@ URL:            https://polymc.org
 Source0:        https://github.com/PolyMC/PolyMC/archive/%{version}/polymc-%{version}.tar.gz
 Source1:        https://github.com/PolyMC/libnbtplusplus/archive/%{libnbtplusplus_commit}/libnbtplusplus-%{libnbtplusplus_shortcommit}.tar.gz
 Source2:        https://github.com/stachenov/quazip/archive/%{quazip_commit}/quazip-%{quazip_shortcommit}.tar.gz
+Source3:        https://github.com/gulrak/filesystem/archive/%{filesystem_commit}/filesystem-%{filesystem_shortcommit}.tar.gz
+Source4:        https://github.com/marzer/tomlplusplus/archive/%{tomlplusplus_commit}/tomlplusplus-%{tomlplusplus_shortcommit}.tar.gz
 
 BuildRequires:  cmake
 BuildRequires:  desktop-file-utils
 BuildRequires:  gcc-c++
 BuildRequires:  extra-cmake-modules
+BuildRequires:  git
 
 BuildRequires:  java-devel
 BuildRequires:  %{?suse_version:lib}qt5-qtbase-devel
@@ -72,6 +78,16 @@ BuildRequires:  %{?suse_version:lib}qt5-qtbase-devel
 BuildRequires:  zlib zlib-devel
 BuildRequires:  scdoc
 
+# i hate opensuse
+BuildRequires:       %{?suse_version:lib}qt5-qtcharts-devel
+
+# Needed for a variety of Image formats fetched from the web
+Requires:       %{?suse_version:lib}qt5-qtimageformats
+# LWJGL uses xrandr for detection
+Requires:       xrandr
+
+# i hate opensuse
+Requires:       %{?suse_version:lib}qt5-qtcharts
 # Needed for loading SVG Icons for Themes
 %if 0%{?suse_version}
 Requires:       libQt5Svg5
@@ -84,7 +100,7 @@ Requires:       %{?suse_version:lib}qt5-qtimageformats
 # LWJGL uses xrandr for detection
 Requires:       xrandr
 
-# i hate opensuse
+# I hate opensuse
 Requires:       %{?suse_version:lib}qt5-qtcharts
 
 # Minecraft <  1.17
@@ -106,9 +122,13 @@ a simple interface.
 
 tar -xvf %{SOURCE1} -C libraries
 tar -xvf %{SOURCE2} -C libraries
-rmdir libraries/libnbtplusplus libraries/quazip
+tar -xvf %{SOURCE3} -C libraries
+tar -xvf %{SOURCE4} -C libraries
+rmdir libraries/libnbtplusplus libraries/quazip libraries/filesystem libraries/tomlplusplus
 mv -f libraries/quazip-%{quazip_commit} libraries/quazip
 mv -f libraries/libnbtplusplus-%{libnbtplusplus_commit} libraries/libnbtplusplus
+mv -f libraries/filesystem-%{filesystem_commit} libraries/filesystem
+mv -f libraries/tomlplusplus-%{tomlplusplus_commit} libraries/tomlplusplus
 
 %build
 %cmake \
@@ -127,6 +147,7 @@ mv -f libraries/libnbtplusplus-%{libnbtplusplus_commit} libraries/libnbtplusplus
 # skip tests on systems that aren't officially supported
 %if ! 0%{?suse_version}
 # check why broken
+# NO.
 #%%ctest
 desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.desktop
 %endif
@@ -145,6 +166,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.des
 
 
 %changelog
+* Fri Mar 03 2023 Carson Rueter <swurl@swurl.xyz> - 5.1-4
+- Fix build and submodules
+
 * Mon Feb 20 2023 Carson Rueter <swurl@swurl.xyz> - 5.1-3
 - Added qt charts dependency
 
