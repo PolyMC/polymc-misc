@@ -8,8 +8,8 @@
 %global tomlplusplus_shortcommit    %(c=%{tomlplusplus_commit}; echo ${c:0:7})
 
 Name:           polymc
-Version:        5.1
-Release:        4%{?dist}
+Version:        6.0
+Release:        1%{?dist}
 Summary:        Minecraft launcher with ability to manage multiple instances
 
 #
@@ -177,6 +177,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.des
 
 
 %changelog
+* Sat Dec 02 2023 Jenkins CI <jenkins@swurl.xyz> - 6.0
+- Update to 6.0
+
 * Fri Mar 03 2023 Carson Rueter <swurl@swurl.xyz> - 5.1-4
 - Fix build and submodules
 
