@@ -77,7 +77,7 @@ BuildRequires:  java-devel
 BuildRequires:  zlib zlib-devel
 BuildRequires:  scdoc
 
-# qt buukd
+# qt build
 %if 0%{?suse_version}
 BuildRequires:  qt6-base-devel
 BuildRequires:  qt6-charts-devel
@@ -85,6 +85,8 @@ BuildRequires:  qt6-charts-devel
 BuildRequires:  qt6-qtbase-devel
 BuildRequires:  qt6-qtcharts-devel
 %endif
+
+BuildRequires:  qt6-qt5compat-devel
 
 # imageformats is needed for image formats fetched from the web
 # svg is needed for icons
