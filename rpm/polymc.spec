@@ -147,7 +147,7 @@ mv -f libraries/tomlplusplus-%{tomlplusplus_commit} libraries/tomlplusplus
 %cmake \
     -DCMAKE_BUILD_TYPE:STRING="RelWithDebInfo" \
     -DLauncher_FORCE_BUNDLED_LIBS:BOOL=ON \
-    -DLauncher_QT_VERSION_MAJOR=5 \
+    -DLauncher_QT_VERSION_MAJOR=6 \
     -DLauncher_UPDATER_BASE:STRING="" \
 
 %cmake_build
