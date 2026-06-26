@@ -106,13 +106,6 @@ Requires:       xrandr
 # LWJGL uses xrandr for detection
 Requires:       xrandr
 
-# i love opensuse
-%if 0%{?suse_version}
-Requires:       libQt5Charts5
-%else
-Requires:       qt5-qtcharts
-%endif
-
 # Minecraft < 1.17
 Recommends:     java-1.8.0-openjdk
 # Minecraft 1.17 - 1.20.4
