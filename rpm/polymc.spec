@@ -8,7 +8,7 @@
 %global tomlplusplus_shortcommit    %(c=%{tomlplusplus_commit}; echo ${c:0:7})
 
 Name:           polymc
-Version:        6.1
+Version:        7.0
 Release:        1%{?dist}
 Summary:        Minecraft launcher with ability to manage multiple instances
 
@@ -73,20 +73,34 @@ BuildRequires:  extra-cmake-modules
 BuildRequires:  git
 
 BuildRequires:  java-devel
-BuildRequires:  %{?suse_version:lib}qt5-qtbase-devel
 # require zlib to ensure we do not compile against zlib-ng
 BuildRequires:  zlib zlib-devel
 BuildRequires:  scdoc
 
-# i love opensuse
+# qt buukd
 %if 0%{?suse_version}
-BuildRequires:  libQt5Charts5-devel
+BuildRequires:  qt6-base-devel
+BuildRequires:  qt6-charts-devel
 %else
-BuildRequires:  qt5-qtcharts-devel
+BuildRequires:  qt6-qtbase-devel
+BuildRequires:  qt6-qtcharts-devel
 %endif
 
-# Needed for a variety of Image formats fetched from the web
-Requires:       %{?suse_version:lib}qt5-qtimageformats
+# imageformats is needed for image formats fetched from the web
+# svg is needed for icons
+%if 0%{?suse_version}
+Requires:       qt6-imageformats
+Requires:       libQt6Charts6
+Requires:       libQt6Svg6
+%else
+Requires:       qt6-qtimageformats
+Requires:       qt6-qtcharts
+Requires:       qt6-qtsvg
+%endif
+
+# LWJGL uses xrandr for detection
+Requires:       xrandr
+
 # LWJGL uses xrandr for detection
 Requires:       xrandr
 
@@ -96,28 +110,16 @@ Requires:       libQt5Charts5
 %else
 Requires:       qt5-qtcharts
 %endif
-# Needed for loading SVG Icons for Themes
-%if 0%{?suse_version}
-Requires:       libQt5Svg5
-%else
-Requires:       qt5-qtsvg
-%endif
 
-# Needed for a variety of Image formats fetched from the web
-Requires:       %{?suse_version:lib}qt5-qtimageformats
-# LWJGL uses xrandr for detection
-Requires:       xrandr
-
-# i love opensuse
-%if 0%{?suse_version}
-Requires:       libQt5Charts5
-%else
-Requires:       qt5-qtcharts
-%endif
-# Minecraft <  1.17
+# Minecraft < 1.17
 Recommends:     java-1.8.0-openjdk
-# Minecraft >= 1.17
+# Minecraft 1.17 - 1.20.4
 Recommends:     java-17-openjdk
+# Minecraft 1.20.5 - 1.21.11
+Recommends:    java-21-openjdk
+# Minecraft 26.1+
+Recommends:    java-25-openjdk
+
 # PolyMC supports enabling gamemode
 Recommends:     gamemode
 
@@ -177,6 +179,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.des
 
 
 %changelog
+* Fri Jun 26 2026 crueter <crueter@eden-emu.dev> - 7.0
+- Update to 7.0 and Qt 6
+
 * Sun Jan 07 2024 Jenkins CI <jenkins@swurl.xyz> - 6.1
 - Update to 6.1
 
