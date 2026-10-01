@@ -169,6 +169,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.des
 %{_datadir}/metainfo/org.polymc.PolyMC.metainfo.xml
 %{_datadir}/jars/NewLaunch.jar
 %{_datadir}/jars/JavaCheck.jar
+%{_datadir}/polymc/legacy-jar-security.properties
 %{_mandir}/man6/polymc.6*
 #%%config %%{_sysconfdir}/ld.so.conf.d/*
 
