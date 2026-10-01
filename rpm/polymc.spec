@@ -8,7 +8,7 @@
 %global tomlplusplus_shortcommit    %(c=%{tomlplusplus_commit}; echo ${c:0:7})
 
 Name:           polymc
-Version:        7.1
+Version:        8.0
 Release:        1%{?dist}
 Summary:        Minecraft launcher with ability to manage multiple instances
 
@@ -174,6 +174,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/org.polymc.PolyMC.des
 
 
 %changelog
+* Wed Sep 30 2026 crueter <crueter@eden-emu.dev> - 8.0
+- Update to 8.0
+
 * Fri Jul 14 2026 crueter <crueter@eden-emu.dev> - 7.1
 - Update to 7.1
 
